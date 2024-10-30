@@ -1,25 +1,439 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yahtzee Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #4ecca3;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 3em;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .die {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .die.held {
+            background: #4ecca3;
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: #4ecca3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 0 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .game-info {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .scorecard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .score-section h3 {
+            color: #4ecca3;
+            margin-bottom: 15px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .score-row:hover:not(.used) {
+            background: rgba(78, 204, 163, 0.2);
+        }
+
+        .score-row.used {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .final-score {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            color: #4ecca3;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .die.rolling {
+            animation: roll 0.5s linear;
+        }
+    </style>
 </head>
 <body>
-    <h1>Yahtzee Game</h1>
-    <div id="dice-container">
-        <!-- Dice placeholders -->
-        <div class="dice" id="dice1">1</div>
-        <div class="dice" id="dice2">2</div>
-        <div class="dice" id="dice3">3</div>
-        <div class="dice" id="dice4">4</div>
-        <div class="dice" id="dice5">5</div>
+    <div class="container">
+        <div class="game-title">
+            <h1>Yahtzee</h1>
+        </div>
+        
+        <div class="dice-container">
+            <div class="die" data-index="0">1</div>
+            <div class="die" data-index="1">2</div>
+            <div class="die" data-index="2">3</div>
+            <div class="die" data-index="3">4</div>
+            <div class="die" data-index="4">5</div>
+        </div>
+
+        <div class="controls">
+            <button id="rollBtn">Roll Dice</button>
+            <button id="newGameBtn" style="display: none;">New Game</button>
+        </div>
+
+        <div class="game-info">
+            Rolls left: <span class="rolls-left">3</span> | 
+            Turn: <span class="turn-counter">1</span>/13
+        </div>
+
+        <div class="scorecard">
+            <div class="score-section">
+                <h3>Upper Section</h3>
+                <div class="score-row" data-category="ones">
+                    <span>Ones</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="twos">
+                    <span>Twos</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="threes">
+                    <span>Threes</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="fours">
+                    <span>Fours</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="fives">
+                    <span>Fives</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="sixes">
+                    <span>Sixes</span>
+                    <span class="score">-</span>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <h3>Lower Section</h3>
+                <div class="score-row" data-category="threeOfAKind">
+                    <span>Three of a Kind</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="fourOfAKind">
+                    <span>Four of a Kind</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="fullHouse">
+                    <span>Full House</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="smallStraight">
+                    <span>Small Straight</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="largeStraight">
+                    <span>Large Straight</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="yahtzee">
+                    <span>Yahtzee</span>
+                    <span class="score">-</span>
+                </div>
+                <div class="score-row" data-category="chance">
+                    <span>Chance</span>
+                    <span class="score">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="final-score">
+            Total Score: <span id="totalScore">0</span>
+        </div>
     </div>
-    <button id="roll-dice">Roll Dice</button>
-    <div id="scoreboard">
-        <!-- Scoreboard placeholder -->
-    </div>
-    <script src="main.js"></script>
+
+    <script>
+        let gameState = {
+            dice: [1, 2, 3, 4, 5],
+            held: [false, false, false, false, false],
+            rollsLeft: 3,
+            turn: 1,
+            scores: {},
+            isRolling: false
+        };
+
+        // Initialize game
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeGame();
+            attachEventListeners();
+        });
+
+        function initializeGame() {
+            gameState = {
+                dice: [1, 2, 3, 4, 5],
+                held: [false, false, false, false, false],
+                rollsLeft: 3,
+                turn: 1,
+                scores: {},
+                isRolling: false
+            };
+            
+            // Reset UI
+            document.querySelectorAll('.die').forEach(die => {
+                die.classList.remove('held');
+                die.textContent = '1';
+            });
+            document.querySelectorAll('.score-row').forEach(row => {
+                row.classList.remove('used');
+                row.querySelector('.score').textContent = '-';
+            });
+            document.getElementById('totalScore').textContent = '0';
+            document.getElementById('newGameBtn').style.display = 'none';
+            document.getElementById('rollBtn').disabled = false;
+            
+            updateDisplay();
+        }
+
+        function attachEventListeners() {
+            // Dice click events
+            document.querySelectorAll('.die').forEach(die => {
+                die.addEventListener('click', () => toggleHold(parseInt(die.dataset.index)));
+            });
+
+            // Roll button
+            document.getElementById('rollBtn').addEventListener('click', rollDice);
+
+            // Score rows
+            document.querySelectorAll('.score-row').forEach(row => {
+                row.addEventListener('click', () => scoreCategory(row.dataset.category));
+            });
+
+            // New game button
+            document.getElementById('newGameBtn').addEventListener('click', initializeGame);
+        }
+
+        function rollDice() {
+            if (gameState.rollsLeft === 0 || gameState.isRolling) return;
+            
+            gameState.isRolling = true;
+            const diceElements = document.querySelectorAll('.die');
+            
+            // Add rolling animation
+            diceElements.forEach((die, index) => {
+                if (!gameState.held[index]) {
+                    die.classList.add('rolling');
+                }
+            });
+
+            // Update dice values after a short delay
+            setTimeout(() => {
+                diceElements.forEach((die, index) => {
+                    if (!gameState.held[index]) {
+                        const newValue = Math.floor(Math.random() * 6) + 1;
+                        gameState.dice[index] = newValue;
+                        die.textContent = newValue;
+                        die.classList.remove('rolling');
+                    }
+                });
+                
+                gameState.isRolling = false;
+                gameState.rollsLeft--;
+                updateDisplay();
+                updatePossibleScores();
+            }, 500);
+        }
+
+        function toggleHold(index) {
+            if (gameState.rollsLeft === 3) return;
+            gameState.held[index] = !gameState.held[index];
+            document.querySelectorAll('.die')[index].classList.toggle('held');
+        }
+
+        function updateDisplay() {
+            document.querySelector('.rolls-left').textContent = gameState.rollsLeft;
+            document.querySelector('.turn-counter').textContent = gameState.turn;
+            document.getElementById('rollBtn').disabled = gameState.rollsLeft === 0;
+        }
+
+        function updatePossibleScores() {
+            if (gameState.rollsLeft === 3) return;
+            
+            const possibleScores = calculatePossibleScores();
+            document.querySelectorAll('.score-row').forEach(row => {
+                const category = row.dataset.category;
+                if (!gameState.scores[category]) {
+                    row.querySelector('.score').textContent = possibleScores[category];
+                }
+            });
+        }
+
+        function calculatePossibleScores() {
+            const counts = {};
+            gameState.dice.forEach(value => {
+                counts[value] = (counts[value] || 0) + 1;
+            });
+
+            const sum = gameState.dice.reduce((a, b) => a + b, 0);
+            const sortedDice = [...gameState.dice].sort((a, b) => a - b);
+            const maxCount = Math.max(...Object.values(counts));
+
+            const scores = {
+                ones: countNumber(1),
+                twos: countNumber(2),
+                threes: countNumber(3),
+                fours: countNumber(4),
+                fives: countNumber(5),
+                sixes: countNumber(6),
+                threeOfAKind: maxCount >= 3 ? sum : 0,
+                fourOfAKind: maxCount >= 4 ? sum : 0,
+                fullHouse: isFullHouse() ? 25 : 0,
+                smallStraight: isSmallStraight() ? 30 : 0,
+                largeStraight: isLargeStraight() ? 40 : 0,
+                yahtzee: maxCount === 5 ? 50 : 0,
+                chance: sum
+            };
+
+            return scores;
+
+            function countNumber(num) {
+                return gameState.dice.filter(d => d === num).reduce((a, b) => a + b, 0);
+            }
+
+            function isFullHouse() {
+                const values = Object.values(counts);
+                return values.includes(2) && values.includes(3);
+            }
+
+            function isSmallStraight() {
+                const unique = [...new Set(sortedDice)].join('');
+                return unique.includes('1234') || unique.includes('2345') || unique.includes('3456');
+            }
+
+            function isLargeStraight() {
+                const unique = [...new Set(sortedDice)].join('');
+                return unique === '12345' || unique === '23456';
+            }
+        }
+
+        function scoreCategory(category) {
+            if (gameState.scores[category] !== undefined || gameState.rollsLeft === 3) return;
+
+            const score = calculatePossibleScores()[category];
+            gameState.scores[category] = score;
+
+            // Update UI
+            const row = document.querySelector(`[data-category="${category}"]`);
+            row.classList.add('used');
+            row.querySelector('.score').textContent = score;
+
+            // Update total score
+            const totalScore = Object.values(gameState.scores).reduce((a, b) => a + b, 0);
+            document.getElementById('totalScore').textContent = totalScore;
+
+            // Reset for next turn
+            gameState.turn++;
+            gameState.rollsLeft = 3;
+            gameState.held = [false, false, false, false, false];
+            document.querySelectorAll('.die').forEach(die => die.classList.remove('held'));
+
+            // Check if game is over
+            if (gameState.turn > 13) {
+                endGame();
+            } else {
+                updateDisplay();
+            }
+        }
+
+        function endGame() {
+            const finalScore = Object.values(gameState.scores).reduce((a, b) => a + b, 0);
+            alert(`Game Over! Final Score: ${finalScore}`);
+            document.getElementById('rollBtn').disabled = true;
+            document.getElementById('newGameBtn').style.display = 'inline-block';
+        }
+    </script>
 </body>
 </html>
