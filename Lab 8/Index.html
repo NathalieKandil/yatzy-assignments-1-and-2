@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 8 - Dice Rolling</title>
+    <!-- jQuery CDN as required by lab -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        /* Container styling */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        /* Dice styling */
+        .dice {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 10px;
+            margin: 20px;
+            position: relative;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        /* Dot styling */
+        .dot {
+            width: 20px;
+            height: 20px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        /* Dot positions for dice face 6 */
+        .dot1 { top: 15px; left: 15px; }
+        .dot2 { top: 15px; right: 15px; }
+        .dot3 { top: 40px; left: 15px; }
+        .dot4 { top: 40px; right: 15px; }
+        .dot5 { bottom: 15px; left: 15px; }
+        .dot6 { bottom: 15px; right: 15px; }
+
+        /* Roll button styling */
+        #rollButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #rollButton:hover {
+            background-color: #45a049;
+        }
+
+        /* Rolling animation */
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .rolling {
+            animation: roll 0.5s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Dice element with initial 6 dots -->
+        <div class="dice">
+            <div class="dot dot1"></div>
+            <div class="dot dot2"></div>
+            <div class="dot dot3"></div>
+            <div class="dot dot4"></div>
+            <div class="dot dot5"></div>
+            <div class="dot dot6"></div>
+        </div>
+        <!-- Roll button -->
+        <button id="rollButton">Roll Dice</button>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Store dot patterns for different dice values
+            const dotPatterns = {
+                1: [[50, 50]],
+                2: [[25, 25], [75, 75]],
+                3: [[25, 25], [50, 50], [75, 75]],
+                4: [[25, 25], [25, 75], [75, 25], [75, 75]],
+                5: [[25, 25], [25, 75], [50, 50], [75, 25], [75, 75]],
+                6: [[25, 25], [25, 50], [25, 75], [75, 25], [75, 50], [75, 75]]
+            };
+
+            // Function to update dice display with new value
+            function updateDice(value) {
+                // Clear existing dots
+                $('.dice').empty();
+                
+                // Add new dots based on value
+                dotPatterns[value].forEach(position => {
+                    $('<div></div>')
+                        .addClass('dot')
+                        .css({
+                            left: `${position[0] - 10}%`,
+                            top: `${position[1] - 10}%`
+                        })
+                        .appendTo('.dice');
+                });
+            }
+
+            // Handle roll button click
+            $('#rollButton').click(function() {
+                // Add rolling animation
+                $('.dice').addClass('rolling');
+                
+                // Disable button during roll
+                $(this).prop('disabled', true);
+
+                // After animation completes (500ms)
+                setTimeout(function() {
+                    // Generate random number 1-6
+                    const randomValue = Math.floor(Math.random() * 6) + 1;
+                    
+                    // Remove rolling animation
+                    $('.dice').removeClass('rolling');
+                    
+                    // Update dice display
+                    updateDice(randomValue);
+                    
+                    // Re-enable button
+                    $('#rollButton').prop('disabled', false);
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>
