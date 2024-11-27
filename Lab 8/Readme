@@ -1,0 +1,13 @@
+Yahtzee Dice Game Project
+
+Core Functionalities
+1. Dice Representation
+Each die is represented with an HTML element displaying the number of dots.
+The dice default to displaying six dots on load.
+The dice will update to show a random number between 1 and 6 each time they’re rolled.
+2. Dice Rolling Animation and Random Value Display
+jQuery is used for efficient DOM manipulation and event handling.
+A button triggers the roll of the dice. On each click, the dice "roll" (animation) and then display a random number between 1 and 6 after the animation completes.
+3. Event Handling with jQuery
+The button is set up to handle events using jQuery.
+The event listener is added to respond to a button click, which starts the rolling animation and random number assignment.
